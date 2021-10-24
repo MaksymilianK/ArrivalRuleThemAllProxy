@@ -1,0 +1,6 @@
+name: ArrivalRuleThemAllProxy
+main: com.github.maksymiliank.arrivalpostofficeproxy.ArrivalPostOfficeProxy
+version: 1.0
+author: Thonem
+depends:
+  - ArrivalPostOfficeProxy
