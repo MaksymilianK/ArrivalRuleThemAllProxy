@@ -1,9 +1,7 @@
 package com.github.maksymiliank.arrivalrulethemallproxy;
 
 import com.github.maksymiliank.arrivalpostofficeproxy.ArrivalPostOfficeProxy;
-import com.github.maksymiliank.arrivalrulethemallproxy.message.InboundMessageType;
-import com.github.maksymiliank.arrivalrulethemallproxy.message.RankDto;
-import com.github.maksymiliank.arrivalrulethemallproxy.message.RankListInboundMessage;
+import com.github.maksymiliank.arrivalrulethemallproxy.message.*;
 import com.github.maksymiliank.rankmanager.Rank;
 import com.github.maksymiliank.rankmanager.RankManager;
 import com.google.gson.Gson;
@@ -18,17 +16,19 @@ public class ArrivalRuleThemAllProxy extends Plugin {
 
     private static RankManager rankManager;
 
-    private CompletableFuture<RankListInboundMessage> enabled = new CompletableFuture<>();
-
+    private final CompletableFuture<RankListInboundMessage> rankListReceived = new CompletableFuture<>();
     private final Gson gson = new Gson();
 
     @Override
     public void onEnable() {
         ArrivalPostOfficeProxy.addApiListener(InboundMessageType.RANK_LIST.getType(), this::onRankList);
+        ArrivalPostOfficeProxy.sendToApi(
+                new RankListOutboundMessage(ArrivalPostOfficeProxy.PROXY_SERVER_ID)
+        );
 
         RankListInboundMessage message;
         try {
-            message = enabled.get();
+            message = rankListReceived.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error while getting rank list");
         }
@@ -48,7 +48,7 @@ public class ArrivalRuleThemAllProxy extends Plugin {
 
     private void onRankList(JsonObject message) {
         var rankList = gson.fromJson(message, RankListInboundMessage.class);
-        enabled.complete(rankList);
+        rankListReceived.complete(rankList);
     }
 
     private Rank rankDtoToRank(RankDto rank) {
